@@ -1,0 +1,127 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "API Pandora - Módulo Clientes",
+    "version": "1.0.0",
+    "description": "API REST para la gestión de clientes (CRUD completo)."
+  },
+  "servers": [
+    {
+      "url": "http://127.0.0.1:5000",
+      "description": "Servidor local"
+    }
+  ],
+  "paths": {
+    "/api/clientes": {
+      "get": {
+        "summary": "Listar todos los clientes",
+        "responses": {
+          "200": {
+            "description": "Lista de clientes obtenida correctamente"
+          }
+        }
+      },
+      "post": {
+        "summary": "Registrar un nuevo cliente",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "nombre": { "type": "string" },
+                  "email": { "type": "string" },
+                  "telefono": { "type": "string" },
+                  "direccion": { "type": "string" }
+                },
+                "required": ["nombre"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Cliente creado correctamente" },
+          "400": { "description": "Error de validación" }
+        }
+      }
+    },
+    "/api/clientes/{id}": {
+      "get": {
+        "summary": "Obtener cliente por ID",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer" }
+          }
+        ],
+        "responses": {
+          "200": { "description": "Cliente encontrado" },
+          "404": { "description": "Cliente no encontrado" }
+        }
+      },
+      "put": {
+        "summary": "Actualizar cliente existente",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "nombre": { "type": "string" },
+                  "email": { "type": "string" },
+                  "telefono": { "type": "string" },
+                  "direccion": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Cliente actualizado correctamente" },
+          "404": { "description": "Cliente no encontrado" }
+        }
+      },
+      "delete": {
+        "summary": "Eliminar cliente por ID",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer" }
+          }
+        ],
+        "responses": {
+          "200": { "description": "Cliente eliminado correctamente" },
+          "404": { "description": "Cliente no encontrado" }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Cliente": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer" },
+          "nombre": { "type": "string" },
+          "email": { "type": "string" },
+          "telefono": { "type": "string" },
+          "direccion": { "type": "string" }
+        }
+      }
+    }
+  }
+}
