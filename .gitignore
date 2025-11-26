@@ -1,4 +1,5 @@
-# Python cache
+cat > .gitignore << 'EOF'
+# Python
 __pycache__/
 *.pyc
 *.pyo
@@ -8,16 +9,34 @@ __pycache__/
 env/
 venv/
 .venv/
+ENV/
+ENV3/
 
-# Flask
+# Conda installers / grandes binarios
+Miniconda3-latest-Linux-x86_64*
+Anaconda3-*
+*.sh
+
+# Flask / instance files
 instance/
 *.db
 
 # VSCode
 .vscode/
 
-# Logs
+# Logs and OS
 *.log
-
-# OS
 .DS_Store
+
+# Node / build
+node_modules/
+dist/
+
+# IDE / OS specific
+*.suo
+*.user
+*.bak
+EOF
+
+# muestra el .gitignore
+cat .gitignore
