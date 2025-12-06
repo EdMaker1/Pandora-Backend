@@ -1,21 +1,33 @@
-alembic==1.17.0
-blinker==1.9.0
-click==8.3.0
+# Flask core
 Flask==3.1.2
-Flask-Migrate==4.1.0
 Flask-SQLAlchemy==3.1.1
+Flask-CORS==4.0.0
+Flask-Migrate==4.1.0
 flask-swagger-ui==5.21.0
-greenlet==3.2.4
-itsdangerous==2.2.0
-Jinja2==3.1.6
-Mako==1.3.10
-MarkupSafe==3.0.3
+
+# Base de datos
+SQLAlchemy==2.0.44
+alembic==1.17.0
+
+# Serialización
 marshmallow==4.0.1
 marshmallow-sqlalchemy==1.4.2
-python-dotenv==1.1.1
-SQLAlchemy==2.0.44
-typing_extensions==4.15.0
-Werkzeug==3.1.3
+
+# Autenticación Google OAuth
 authlib==1.3.1
-gunicorn
-Flask-Cors==4.0.0
+requests==2.32.3
+
+# Servidor de producción
+gunicorn==21.2.0
+
+# Utilidades
+python-dotenv==1.1.1
+Werkzeug==3.1.3
+itsdangerous==2.2.0
+click==8.3.0
+blinker==1.9.0
+Jinja2==3.1.6
+MarkupSafe==3.0.3
+Mako==1.3.10
+greenlet==3.2.4
+typing_extensions==4.15.0
