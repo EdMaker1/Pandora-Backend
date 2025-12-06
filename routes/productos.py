@@ -1,12 +1,15 @@
 from flask import Blueprint, request, jsonify
 from services.productos_service import ProductoService
 from schemas import ProductoSchema
+from routes.auth import login_required, role_required
 
 productos_bp = Blueprint('productos', __name__)
 producto_schema = ProductoSchema()
 productos_schema = ProductoSchema(many=True)
 
 @productos_bp.route('/', methods=['GET'])
+@login_required
+@role_required('ADMINISTRADOR', 'SOPORTE', 'VENDEDOR', 'CAJERO', 'ALMACEN')
 def listar_productos():
     try:
         activos_solo = request.args.get('activos', 'true').lower() == 'true'
@@ -16,6 +19,8 @@ def listar_productos():
         return jsonify({'error': str(e)}), 500
 
 @productos_bp.route('/<int:pid>', methods=['GET'])
+@login_required
+@role_required('ADMINISTRADOR', 'SOPORTE', 'VENDEDOR', 'CAJERO', 'ALMACEN')
 def obtener_producto(pid):
     try:
         producto = ProductoService.obtener_por_id(pid)
@@ -26,6 +31,8 @@ def obtener_producto(pid):
         return jsonify({'error': str(e)}), 500
 
 @productos_bp.route('/', methods=['POST'])
+@login_required
+@role_required('ADMINISTRADOR', 'SOPORTE', 'VENDEDOR', 'CAJERO', 'ALMACEN')
 def crear_producto():
     try:
         data = request.get_json()
@@ -40,6 +47,8 @@ def crear_producto():
         return jsonify({'error': str(e)}), 500
 
 @productos_bp.route('/<int:pid>', methods=['PUT', 'PATCH'])
+@login_required
+@role_required('ADMINISTRADOR', 'SOPORTE', 'VENDEDOR', 'CAJERO', 'ALMACEN')
 def actualizar_producto(pid):
     try:
         data = request.get_json()
@@ -54,6 +63,8 @@ def actualizar_producto(pid):
         return jsonify({'error': str(e)}), 500
 
 @productos_bp.route('/<int:pid>', methods=['DELETE'])
+@login_required
+@role_required('ADMINISTRADOR', 'SOPORTE', 'ALMACEN')
 def eliminar_producto(pid):
     try:
         ProductoService.eliminar(pid)
@@ -64,6 +75,8 @@ def eliminar_producto(pid):
         return jsonify({'error': str(e)}), 500
 
 @productos_bp.route('/<int:pid>/ajustar-stock', methods=['POST'])
+@login_required
+@role_required('ADMINISTRADOR', 'SOPORTE', 'ALMACEN')
 def ajustar_stock(pid):
     try:
         data = request.get_json()
@@ -84,6 +97,8 @@ def ajustar_stock(pid):
         return jsonify({'error': str(e)}), 500
 
 @productos_bp.route('/categoria/<int:categoria_id>', methods=['GET'])
+@login_required
+@role_required('ADMINISTRADOR', 'SOPORTE', 'VENDEDOR', 'CAJERO', 'ALMACEN')
 def productos_por_categoria(categoria_id):
     try:
         productos = ProductoService.obtener_por_categoria(categoria_id)
@@ -92,6 +107,8 @@ def productos_por_categoria(categoria_id):
         return jsonify({'error': str(e)}), 500
 
 @productos_bp.route('/buscar', methods=['GET'])
+@login_required
+@role_required('ADMINISTRADOR', 'SOPORTE', 'VENDEDOR', 'CAJERO', 'ALMACEN')
 def buscar_productos():
     termino = request.args.get('q', '')
     if not termino:

@@ -8,14 +8,14 @@ load_dotenv(os.path.join(basedir, '.env'))
 
 class Config:
     # Clave secreta
-    SECRET_KEY = os.getenv("FLASK_SECRET_KEY", "super-secret-key")
-
+    SECRET_KEY = os.getenv("FLASK_SECRET_KEY")
+    
     # Google OAuth
     GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID")
     GOOGLE_CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET")
-
-    # URI de la base de datos
+    
+    # URI de la base de datos - CORREGIDO para usar instance/Pandora.db
     SQLALCHEMY_DATABASE_URI = os.getenv("DATABASE_URL") or \
-        'sqlite:///' + os.path.join(basedir, 'Pandora.db')
+        'sqlite:///' + os.path.join(basedir, 'instance', 'Pandora.db')
+    
     SQLALCHEMY_TRACK_MODIFICATIONS = False
-

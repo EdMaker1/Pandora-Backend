@@ -1,0 +1,62 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.py[cod]
+*$py.class
+*.so
+
+# Virtual environments
+env/
+venv/
+.venv/
+ENV/
+ENV3/
+
+# Conda
+Miniconda3-*
+Anaconda3-*
+*.sh
+
+# Flask / Base de datos
+instance/
+*.db
+*.sqlite
+*.sqlite3
+
+# Entorno
+.env
+.env.local
+.env.production
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Logs y sistema
+*.log
+.DS_Store
+Thumbs.db
+
+# Carpetas de backup
+*_backup_*/
+Pnadora_backup_/
+Pandora_backup_20251122_045612/
+Pandora_backup_20251125_111921/
+Pandora_backup_20251203_115107/
+Pandora_backup_20251204_000313/
+
+# Docker
+Dockerfile
+
+# IMPORTANTE: Excluir el FRONTEND del backend
+frontend/
+node_modules/
+dist/
+*.local
+
+# Archivos grandes
+Miniconda3-latest-Linux-x86_64.sh

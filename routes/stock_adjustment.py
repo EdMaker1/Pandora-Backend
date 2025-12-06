@@ -1,13 +1,17 @@
-from flask import Blueprint, request, jsonify
-from models import db, StockAdjustment
+from flask import Blueprint, request, jsonify, session
+from models import db, StockAdjustment, Producto
 from schemas import StockAdjustmentSchema
+from routes.auth import login_required, role_required
 
 stock_bp = Blueprint('stock_adjustment', __name__)
 stock_schema = StockAdjustmentSchema()
 stocks_schema = StockAdjustmentSchema(many=True)
 
 @stock_bp.route('/', methods=['GET'])
+@login_required
+@role_required('ADMINISTRADOR', 'SOPORTE', 'ALMACEN')  # Almacén también puede ver
 def listar_ajustes():
+    """Lista todos los ajustes de stock"""
     try:
         ajustes = StockAdjustment.query.order_by(StockAdjustment.created_at.desc()).all()
         return jsonify(stocks_schema.dump(ajustes)), 200
@@ -15,7 +19,10 @@ def listar_ajustes():
         return jsonify({'error': str(e)}), 500
 
 @stock_bp.route('/<int:sid>', methods=['GET'])
+@login_required
+@role_required('ADMINISTRADOR', 'SOPORTE', 'ALMACEN')
 def obtener_ajuste(sid):
+    """Obtiene un ajuste específico"""
     try:
         ajuste = StockAdjustment.query.get_or_404(sid)
         return jsonify(stock_schema.dump(ajuste)), 200
@@ -23,7 +30,10 @@ def obtener_ajuste(sid):
         return jsonify({'error': 'Ajuste no encontrado'}), 404
 
 @stock_bp.route('/', methods=['POST'])
+@login_required
+@role_required('ADMINISTRADOR', 'SOPORTE', 'ALMACEN')
 def crear_ajuste():
+    """Crea un nuevo ajuste de stock"""
     try:
         data = request.get_json()
         if not data:
@@ -34,50 +44,82 @@ def crear_ajuste():
             if r not in data:
                 return jsonify({'error': f'{r} es requerido'}), 400
         
+        # Verificar que el producto existe
+        producto = Producto.query.get(data['producto_id'])
+        if not producto:
+            return jsonify({'error': 'Producto no encontrado'}), 404
+        
+        # Crear ajuste y actualizar stock del producto
         ajuste = StockAdjustment(
             producto_id=data['producto_id'],
             cantidad=data['cantidad'],
             motivo=data['motivo'],
-            registrado_por=data.get('registrado_por')
+            registrado_por=session.get('user_id')  # Usuario actual
         )
+        
+        # Actualizar stock del producto
+        nuevo_stock = producto.stock_actual + data['cantidad']
+        if nuevo_stock < 0:
+            return jsonify({'error': 'El ajuste resultaría en stock negativo'}), 400
+        
+        producto.stock_actual = nuevo_stock
+        
         db.session.add(ajuste)
+        db.session.add(producto)
         db.session.commit()
-        return jsonify(stock_schema.dump(ajuste)), 201
+        
+        return jsonify({
+            'message': 'Ajuste registrado exitosamente',
+            'ajuste': stock_schema.dump(ajuste),
+            'nuevo_stock': nuevo_stock
+        }), 201
     except Exception as e:
         db.session.rollback()
         return jsonify({'error': str(e)}), 500
 
 @stock_bp.route('/<int:sid>', methods=['PUT', 'PATCH'])
+@login_required
+@role_required('ADMINISTRADOR', 'SOPORTE', 'ALMACEN')  # Solo ADMIN y SOPORTE pueden editar
 def actualizar_ajuste(sid):
+    """Actualiza un ajuste existente"""
     try:
         ajuste = StockAdjustment.query.get_or_404(sid)
         data = request.get_json()
         if not data:
             return jsonify({'error': 'No se proporcionaron datos'}), 400
         
-        for key in ['producto_id', 'cantidad', 'motivo', 'registrado_por']:
-            if key in data:
-                setattr(ajuste, key, data[key])
+        # Solo permitir actualizar el motivo
+        if 'motivo' in data:
+            ajuste.motivo = data['motivo']
         
         db.session.commit()
-        return jsonify(stock_schema.dump(ajuste)), 200
+        return jsonify({
+            'message': 'Ajuste actualizado exitosamente',
+            'ajuste': stock_schema.dump(ajuste)
+        }), 200
     except Exception as e:
         db.session.rollback()
         return jsonify({'error': str(e)}), 500
 
 @stock_bp.route('/<int:sid>', methods=['DELETE'])
+@login_required
+@role_required('ADMINISTRADOR', 'SOPORTE', 'ALMACEN')  # Solo ADMIN puede eliminar
 def eliminar_ajuste(sid):
+    """Elimina un ajuste de stock"""
     try:
         ajuste = StockAdjustment.query.get_or_404(sid)
         db.session.delete(ajuste)
         db.session.commit()
-        return jsonify({'message': 'Ajuste de stock eliminado correctamente'}), 200
+        return jsonify({'message': 'Ajuste eliminado correctamente'}), 200
     except Exception as e:
         db.session.rollback()
         return jsonify({'error': str(e)}), 500
 
 @stock_bp.route('/producto/<int:producto_id>', methods=['GET'])
+@login_required
+@role_required('ADMINISTRADOR', 'SOPORTE', 'ALMACEN')
 def ajustes_por_producto(producto_id):
+    """Lista ajustes de un producto específico"""
     try:
         ajustes = StockAdjustment.query.filter_by(producto_id=producto_id).order_by(StockAdjustment.created_at.desc()).all()
         return jsonify(stocks_schema.dump(ajustes)), 200

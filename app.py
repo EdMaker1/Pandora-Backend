@@ -4,11 +4,11 @@ from models import db
 from flask_migrate import Migrate
 from flask_swagger_ui import get_swaggerui_blueprint
 from flask_cors import CORS
+from datetime import timedelta
+import os
 
-# Importar Google SSO
 from routes.auth_google import auth_google_bp, init_google
-
-# Importar Blueprints API
+from routes.auth import auth_bp
 from routes.categorias import categorias_bp
 from routes.productos import productos_bp
 from routes.empleados import empleados_bp
@@ -21,19 +21,48 @@ from routes.pagos import pagos_bp
 def create_app():
     app = Flask(__name__, static_folder='static')
     app.config.from_object(Config)
+    app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(hours=24)
+    
+    # ============================================================
+    # CONFIGURACIÓN DE COOKIES PARA DESARROLLO Y PRODUCCIÓN
+    # ============================================================
+    app.config['SESSION_COOKIE_NAME'] = 'pandora_session'
+    app.config['SESSION_COOKIE_SAMESITE'] = None
+    app.config['SESSION_COOKIE_HTTPONLY'] = False
+    app.config['SESSION_COOKIE_SECURE'] = False  # En producción con HTTPS, Render lo maneja
+    app.config['SESSION_COOKIE_PATH'] = '/'
+    # ============================================================
 
-    # Habilitar CORS
-    CORS(app, resources={r"/*": {"origins": "*"}})
+    # ============================================================
+    # CORS DINÁMICO - DESARROLLO Y PRODUCCIÓN
+    # ============================================================
+    FRONTEND_URL = os.getenv('FRONTEND_URL', 'http://localhost:3000')
+    
+    # Lista de orígenes permitidos
+    allowed_origins = [
+        "http://localhost:3000",
+        "http://127.0.0.1:3000"
+    ]
+    
+    # Agregar URL de producción si existe y es diferente
+    if FRONTEND_URL and FRONTEND_URL not in allowed_origins:
+        allowed_origins.append(FRONTEND_URL)
+    
+    print(f"🌐 CORS configurado para orígenes: {allowed_origins}")
+    
+    CORS(app, 
+         resources={r"/*": {"origins": allowed_origins}},
+         supports_credentials=True,
+         allow_headers=["Content-Type"],
+         methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"])
+    # ============================================================
 
-    # Inicializar extensiones
     db.init_app(app)
     migrate = Migrate(app, db)
 
-    # Inicializar SSO Google
     init_google(app)
     app.register_blueprint(auth_google_bp)
-
-    # Registrar Blueprints API (sin /api en las rutas porque ya está en url_prefix)
+    app.register_blueprint(auth_bp, url_prefix='/api/auth')
     app.register_blueprint(categorias_bp, url_prefix='/api/categorias')
     app.register_blueprint(productos_bp, url_prefix='/api/productos')
     app.register_blueprint(empleados_bp, url_prefix='/api/empleados')
@@ -43,17 +72,11 @@ def create_app():
     app.register_blueprint(stock_bp, url_prefix='/api/stock_adjustments')
     app.register_blueprint(pagos_bp, url_prefix='/api/pagos')
 
-    # Swagger UI estándar (/swagger)
     SWAGGER_URL = '/swagger'
     API_URL = '/static/swagger.json'
-    swaggerui_bp = get_swaggerui_blueprint(
-        SWAGGER_URL,
-        API_URL,
-        config={'app_name': "API Librería Pandora"}
-    )
+    swaggerui_bp = get_swaggerui_blueprint(SWAGGER_URL, API_URL, config={'app_name': "API Librería Pandora"})
     app.register_blueprint(swaggerui_bp, url_prefix=SWAGGER_URL)
 
-    # Servir OpenAPI JSON
     @app.route('/openapi.json')
     def openapi():
         response = make_response(send_from_directory('static', 'swagger.json'))
@@ -61,46 +84,31 @@ def create_app():
         response.headers['Access-Control-Allow-Origin'] = '*'
         return response
 
-    # Servir Swagger UI personalizado (/docs)
     @app.route("/docs")
     def swagger_ui_html():
         return send_from_directory('static', 'swagger_ui.html')
 
-    # Página raíz
     @app.route('/')
     def index():
-        return '''<h2>✨ Bienvenido a la API Pandora</h2>
-                  <p>Documentación disponible en:</p>
+        return '''<h2>✨ API Pandora</h2>
+                  <p>Backend en la nube</p>
                   <ul>
-                      <li><a href="/swagger">/swagger</a> - Swagger UI estándar</li>
-                      <li><a href="/docs">/docs</a> - Swagger UI personalizado</li>
-                      <li><a href="/auth/login">/auth/login</a> - Login con Google</li>
-                      <li><a href="/auth/me">/auth/me</a> - Ver usuario logueado</li>
-                  </ul>
-                  <h3>Endpoints API:</h3>
-                  <ul>
-                      <li>/api/categorias</li>
-                      <li>/api/productos</li>
-                      <li>/api/empleados</li>
-                      <li>/api/clientes</li>
-                      <li>/api/ventas</li>
-                      <li>/api/pagos</li>
-                      <li>/api/stock_adjustments</li>
-                      <li>/api/reportes</li>
+                      <li><a href="/docs">/docs</a> - Documentación</li>
+                      <li>POST /api/auth/login - Login</li>
+                      <li>GET /api/auth/me - Usuario actual</li>
+                      <li>GET /auth/google/login - Login con Google</li>
                   </ul>'''
 
-    # Manejo de errores
     @app.errorhandler(404)
     def not_found(e):
         return jsonify({"error": "Recurso no encontrado"}), 404
 
     @app.errorhandler(500)
     def internal_error(e):
-        return jsonify({"error": "Error interno del servidor"}), 500
+        return jsonify({"error": "Error interno"}), 500
 
     return app
 
-# Instancia global para Gunicorn
 app = create_app()
 
 if __name__ == '__main__':

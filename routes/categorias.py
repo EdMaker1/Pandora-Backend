@@ -1,12 +1,15 @@
 from flask import Blueprint, request, jsonify
 from services.categorias_service import CategoriaService
 from schemas import CategoriaSchema
+from routes.auth import login_required, role_required
 
 categorias_bp = Blueprint('categorias', __name__)
 categoria_schema = CategoriaSchema()
 categorias_schema = CategoriaSchema(many=True)
 
 @categorias_bp.route('/', methods=['GET'])
+@login_required
+@role_required('ADMINISTRADOR', 'SOPORTE', 'VENDEDOR', 'CAJERO', 'ALMACEN')
 def listar_categorias():
     try:
         categorias = CategoriaService.obtener_todas()
@@ -15,6 +18,8 @@ def listar_categorias():
         return jsonify({'error': str(e)}), 500
 
 @categorias_bp.route('/<int:cid>', methods=['GET'])
+@login_required
+@role_required('ADMINISTRADOR', 'SOPORTE', 'VENDEDOR', 'CAJERO', 'ALMACEN')
 def obtener_categoria(cid):
     try:
         categoria = CategoriaService.obtener_por_id(cid)
@@ -25,6 +30,8 @@ def obtener_categoria(cid):
         return jsonify({'error': str(e)}), 500
 
 @categorias_bp.route('/', methods=['POST'])
+@login_required
+@role_required('ADMINISTRADOR', 'SOPORTE', 'VENDEDOR', 'CAJERO', 'ALMACEN')
 def crear_categoria():
     try:
         data = request.get_json()
@@ -39,6 +46,8 @@ def crear_categoria():
         return jsonify({'error': str(e)}), 500
 
 @categorias_bp.route('/<int:cid>', methods=['PUT', 'PATCH'])
+@login_required
+@role_required('ADMINISTRADOR', 'SOPORTE', 'VENDEDOR', 'CAJERO', 'ALMACEN')
 def actualizar_categoria(cid):
     try:
         data = request.get_json()
@@ -53,6 +62,8 @@ def actualizar_categoria(cid):
         return jsonify({'error': str(e)}), 500
 
 @categorias_bp.route('/<int:cid>', methods=['DELETE'])
+@login_required
+@role_required('ADMINISTRADOR', 'SOPORTE')
 def eliminar_categoria(cid):
     try:
         CategoriaService.eliminar(cid)
@@ -63,6 +74,8 @@ def eliminar_categoria(cid):
         return jsonify({'error': str(e)}), 500
 
 @categorias_bp.route('/<int:cid>/productos/count', methods=['GET'])
+@login_required
+@role_required('ADMINISTRADOR', 'SOPORTE', 'VENDEDOR', 'CAJERO', 'ALMACEN')
 def contar_productos_categoria(cid):
     try:
         cantidad = CategoriaService.contar_productos(cid)

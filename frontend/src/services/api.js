@@ -1,88 +1,36 @@
-/*'''import axios from 'axios'
-
-const api = axios.create({
-  baseURL: 'http://localhost:5000/api',
-  headers: {
-    'Content-Type': 'application/json'
-  }
-})
-
-// Interceptor para manejar errores
-api.interceptors.response.use(
-  response => response,
-  error => {
-    console.error('Error en la petición:', error)
-    return Promise.reject(error)
-  }
-)
-
-export default {
-  // Categorías
-  categorias: {
-    getAll: () => api.get('/categorias'),
-    getById: (id) => api.get(`/categorias/${id}`),
-    create: (data) => api.post('/categorias', data),
-    update: (id, data) => api.put(`/categorias/${id}`, data),
-    delete: (id) => api.delete(`/categorias/${id}`)
-  },
-  
-  // Productos
-  productos: {
-    getAll: () => api.get('/productos'),
-    getById: (id) => api.get(`/productos/${id}`),
-    create: (data) => api.post('/productos', data),
-    update: (id, data) => api.put(`/productos/${id}`, data),
-    delete: (id) => api.delete(`/productos/${id}`)
-  },
-  
-  // Clientes
-  clientes: {
-    getAll: () => api.get('/clientes'),
-    getById: (id) => api.get(`/clientes/${id}`),
-    create: (data) => api.post('/clientes', data),
-    update: (id, data) => api.put(`/clientes/${id}`, data),
-    delete: (id) => api.delete(`/clientes/${id}`)
-  },
-  
-  // Ventas
-  ventas: {
-    getAll: () => api.get('/ventas'),
-    getById: (id) => api.get(`/ventas/${id}`),
-    create: (data) => api.post('/ventas', data),
-    update: (id, data) => api.put(`/ventas/${id}`, data),
-    delete: (id) => api.delete(`/ventas/${id}`)
-  },
-  
-  // Empleados
-  empleados: {
-    getAll: () => api.get('/empleados')
-  }
-}
-'''*/
 import axios from 'axios'
 
 const api = axios.create({
-  // CORRECCIÓN: Usar una URL relativa /api. 
-  // Esto permite que el proxy de Vite (en dev) se encargue de reenviar a localhost:5000, 
-  // y en producción, la llamada se hace al propio dominio (ej. miweb.com/api).
-  baseURL: '/api', 
+  baseURL: '/api',
   headers: {
     'Content-Type': 'application/json'
-  }
+  },
+  withCredentials: true
 })
 
-// Interceptor para manejar errores
 api.interceptors.response.use(
   response => response,
   error => {
-    // Aquí puedes añadir lógica de manejo de errores HTTP (ej. mostrar notificación)
-    console.error('Error en la petición:', error)
+    if (error.response?.status === 401) {
+      if (window.location.pathname !== '/login') {
+        localStorage.removeItem('user')
+        window.location.href = '/login'
+      }
+    }
     return Promise.reject(error)
   }
 )
 
 export default {
-  // Categorías
+  // AUTENTICACIÓN
+  auth: {
+    login: (credentials) => api.post('/auth/login', credentials),
+    logout: () => api.post('/auth/logout'),
+    me: () => api.get('/auth/me'),
+    check: () => api.get('/auth/check')
+  },
+
+  // CATEGORÍAS
   categorias: {
     getAll: () => api.get('/categorias'),
     getById: (id) => api.get(`/categorias/${id}`),
@@ -91,7 +39,7 @@ export default {
     delete: (id) => api.delete(`/categorias/${id}`)
   },
   
-  // Productos
+  // PRODUCTOS
   productos: {
     getAll: () => api.get('/productos'),
     getById: (id) => api.get(`/productos/${id}`),
@@ -100,7 +48,7 @@ export default {
     delete: (id) => api.delete(`/productos/${id}`)
   },
   
-  // Clientes
+  // CLIENTES
   clientes: {
     getAll: () => api.get('/clientes'),
     getById: (id) => api.get(`/clientes/${id}`),
@@ -109,7 +57,7 @@ export default {
     delete: (id) => api.delete(`/clientes/${id}`)
   },
   
-  // Ventas
+  // VENTAS
   ventas: {
     getAll: () => api.get('/ventas'),
     getById: (id) => api.get(`/ventas/${id}`),
@@ -118,8 +66,39 @@ export default {
     delete: (id) => api.delete(`/ventas/${id}`)
   },
   
-  // Empleados
+  // EMPLEADOS
   empleados: {
-    getAll: () => api.get('/empleados')
+    getAll: () => api.get('/empleados'),
+    getById: (id) => api.get(`/empleados/${id}`),
+    create: (data) => api.post('/empleados', data),
+    update: (id, data) => api.put(`/empleados/${id}`, data),
+    delete: (id) => api.delete(`/empleados/${id}`)
+  },
+
+  // PAGOS
+  pagos: {
+    getAll: () => api.get('/pagos'),
+    getById: (id) => api.get(`/pagos/${id}`),
+    create: (data) => api.post('/pagos', data),
+    update: (id, data) => api.put(`/pagos/${id}`, data),
+    delete: (id) => api.delete(`/pagos/${id}`),
+    porVenta: (ventaId) => api.get(`/pagos/venta/${ventaId}`)
+  },
+
+  // STOCK
+  stock: {
+    getAll: () => api.get('/stock_adjustments'),
+    getById: (id) => api.get(`/stock_adjustments/${id}`),
+    create: (data) => api.post('/stock_adjustments', data),
+    porProducto: (productoId) => api.get(`/stock_adjustments/producto/${productoId}`)
+  },
+
+  // REPORTES
+  reportes: {
+    resumen: () => api.get('/reportes/resumen'),
+    ventas: () => api.get('/reportes/ventas'),
+    productos: () => api.get('/reportes/productos'),
+    clientes: () => api.get('/reportes/clientes'),
+    bajoStock: () => api.get('/reportes/productos-bajo-stock')
   }
 }

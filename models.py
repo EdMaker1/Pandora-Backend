@@ -1,5 +1,6 @@
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
+from werkzeug.security import generate_password_hash, check_password_hash
 
 db = SQLAlchemy()
 
@@ -33,10 +34,24 @@ class Empleado(db.Model):
     apellido_paterno = db.Column(db.String(80), nullable=False)
     apellido_materno = db.Column(db.String(80), nullable=True)
     username = db.Column(db.String(80), unique=True, nullable=False)
+    password_hash = db.Column(db.String(255), nullable=True)  # Nullable para usuarios de Google
     rol = db.Column(db.String(30), nullable=False)
     email = db.Column(db.String(150), nullable=True)
     activo = db.Column(db.Boolean, default=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # Campos para Google OAuth
+    google_id = db.Column(db.String(255), unique=True, nullable=True)
+    google_email = db.Column(db.String(255), nullable=True)
+    google_picture = db.Column(db.String(512), nullable=True)
+    
+    def set_password(self, password):
+        self.password_hash = generate_password_hash(password)
+    
+    def check_password(self, password):
+        if not self.password_hash:
+            return False
+        return check_password_hash(self.password_hash, password)
 
 class Cliente(db.Model):
     __tablename__='cliente'
@@ -78,8 +93,6 @@ class VentaItem(db.Model):
 class Pago(db.Model):
     __tablename__='pago'
     id = db.Column(db.Integer, primary_key=True)
-    cliente = db.Column(db.String(150), nullable=True)
-    telefono = db.Column(db.String(30), nullable=True)
     venta_id = db.Column(db.Integer, db.ForeignKey('venta.id'), nullable=False)
     venta = db.relationship('Venta', backref=db.backref('pagos', lazy=True))
     monto = db.Column(db.Numeric(12,2), nullable=False)

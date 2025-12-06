@@ -1,12 +1,15 @@
 from flask import Blueprint, request, jsonify
 from services.ventas_service import VentaService
 from schemas import VentaSchema
+from routes.auth import login_required, role_required
 
 ventas_bp = Blueprint('ventas', __name__)
 venta_schema = VentaSchema()
 ventas_schema = VentaSchema(many=True)
 
 @ventas_bp.route('/', methods=['GET'])
+@login_required
+@role_required('ADMINISTRADOR', 'SOPORTE', 'VENDEDOR', 'CAJERO')
 def listar_ventas():
     try:
         ventas = VentaService.obtener_todas()
@@ -15,6 +18,8 @@ def listar_ventas():
         return jsonify({'error': str(e)}), 500
 
 @ventas_bp.route('/<int:vid>', methods=['GET'])
+@login_required
+@role_required('ADMINISTRADOR', 'SOPORTE', 'VENDEDOR', 'CAJERO')
 def obtener_venta(vid):
     try:
         venta = VentaService.obtener_por_id(vid)
@@ -25,6 +30,8 @@ def obtener_venta(vid):
         return jsonify({'error': str(e)}), 500
 
 @ventas_bp.route('/', methods=['POST'])
+@login_required
+@role_required('ADMINISTRADOR', 'SOPORTE', 'VENDEDOR', 'CAJERO')
 def crear_venta():
     try:
         data = request.get_json()
@@ -48,6 +55,8 @@ def crear_venta():
         return jsonify({'error': str(e)}), 500
 
 @ventas_bp.route('/<int:vid>', methods=['PUT', 'PATCH'])
+@login_required
+@role_required('ADMINISTRADOR', 'SOPORTE', 'VENDEDOR', 'CAJERO')
 def actualizar_venta(vid):
     try:
         data = request.get_json()
@@ -62,6 +71,8 @@ def actualizar_venta(vid):
         return jsonify({'error': str(e)}), 500
 
 @ventas_bp.route('/<int:vid>', methods=['DELETE'])
+@login_required
+@role_required('ADMINISTRADOR', 'SOPORTE')
 def eliminar_venta(vid):
     try:
         VentaService.eliminar(vid)
@@ -72,6 +83,8 @@ def eliminar_venta(vid):
         return jsonify({'error': str(e)}), 500
 
 @ventas_bp.route('/cliente/<int:cliente_id>', methods=['GET'])
+@login_required
+@role_required('ADMINISTRADOR', 'SOPORTE', 'VENDEDOR', 'CAJERO')
 def ventas_por_cliente(cliente_id):
     try:
         ventas = VentaService.obtener_por_cliente(cliente_id)
@@ -80,6 +93,8 @@ def ventas_por_cliente(cliente_id):
         return jsonify({'error': str(e)}), 500
 
 @ventas_bp.route('/vendedor/<int:vendedor_id>', methods=['GET'])
+@login_required
+@role_required('ADMINISTRADOR', 'SOPORTE', 'VENDEDOR', 'CAJERO')
 def ventas_por_vendedor(vendedor_id):
     try:
         ventas = VentaService.obtener_por_vendedor(vendedor_id)

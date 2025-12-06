@@ -4,10 +4,13 @@ Usa la capa de servicios para la lógica de negocio
 """
 from flask import Blueprint, jsonify, request
 from services.clientes_service import ClienteService
+from routes.auth import login_required, role_required
 
 clientes_bp = Blueprint('clientes', __name__)
 
 @clientes_bp.route('/', methods=['GET'])
+@login_required
+@role_required('ADMINISTRADOR', 'SOPORTE', 'VENDEDOR', 'CAJERO')
 def get_clientes():
     """Obtener todos los clientes"""
     try:
@@ -19,6 +22,8 @@ def get_clientes():
 
 
 @clientes_bp.route('/<int:id>', methods=['GET'])
+@login_required
+@role_required('ADMINISTRADOR', 'SOPORTE', 'VENDEDOR', 'CAJERO')
 def get_cliente(id):
     """Obtener cliente por ID"""
     try:
@@ -31,6 +36,8 @@ def get_cliente(id):
 
 
 @clientes_bp.route('/', methods=['POST'])
+@login_required
+@role_required('ADMINISTRADOR', 'SOPORTE', 'VENDEDOR', 'CAJERO')
 def add_cliente():
     """Crear nuevo cliente"""
     try:
@@ -51,6 +58,8 @@ def add_cliente():
 
 
 @clientes_bp.route('/<int:id>', methods=['PUT', 'PATCH'])
+@login_required
+@role_required('ADMINISTRADOR', 'SOPORTE', 'VENDEDOR', 'CAJERO')
 def update_cliente(id):
     """Actualizar cliente existente"""
     try:
@@ -71,6 +80,8 @@ def update_cliente(id):
 
 
 @clientes_bp.route('/<int:id>', methods=['DELETE'])
+@login_required
+@role_required('ADMINISTRADOR', 'SOPORTE')
 def delete_cliente(id):
     """Eliminar cliente"""
     try:
@@ -84,6 +95,8 @@ def delete_cliente(id):
 
 
 @clientes_bp.route('/buscar', methods=['GET'])
+@login_required
+@role_required('ADMINISTRADOR', 'SOPORTE', 'VENDEDOR', 'CAJERO')
 def buscar_cliente():
     """Buscar cliente por email"""
     email = request.args.get('email')
