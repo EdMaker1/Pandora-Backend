@@ -90,7 +90,7 @@ def authorize():
             return redirect(f"{FRONTEND_URL}/login?error=account_disabled")
         
         # Crear sesión en el backend
-        print("🔐 Creando sesión...")
+        print("�� Creando sesión...")
         session.permanent = True
         session['user_id'] = empleado.id
         session['username'] = empleado.username
@@ -110,8 +110,8 @@ def authorize():
             'login_method': 'google'
         }
         
-        print(f"✅ Sesión creada y token generado")
-        print(f"🔄 Redirigiendo a {FRONTEND_URL}/?token={temp_token[:10]}...")
+        print(f"✅ Sesión creada y token generado: {temp_token[:16]}...")
+        print(f"🔄 Redirigiendo a {FRONTEND_URL}/?token={temp_token[:16]}...")
         
         # Redirigir al frontend con el token
         return redirect(f"{FRONTEND_URL}/?token={temp_token}")
@@ -129,11 +129,15 @@ def exchange_token():
     data = request.get_json()
     token = data.get('token')
     
+    print(f"🔄 Recibida petición de intercambio de token: {token[:16] if token else 'None'}...")
+    
     if not token or token not in temp_tokens:
+        print("❌ Token inválido o expirado")
         return jsonify({"error": "Token inválido o expirado"}), 401
     
     # Obtener datos del token
     user_data = temp_tokens.pop(token)  # Eliminar token después de usarlo
+    print(f"✅ Token intercambiado exitosamente para usuario: {user_data.get('username')}")
     
     return jsonify(user_data), 200
 
