@@ -35,10 +35,12 @@ def login():
     if not empleado or not empleado.check_password(data['password']):
         return jsonify({'error': 'Credenciales inválidas'}), 401
     
+    session.permanent = True
     session['user_id'] = empleado.id
     session['username'] = empleado.username
     session['rol'] = empleado.rol
     session['nombre_completo'] = f"{empleado.primer_nombre} {empleado.apellido_paterno}"
+    session['login_method'] = 'traditional'
     
     return jsonify({
         'message': 'Login exitoso',
@@ -46,7 +48,8 @@ def login():
             'id': empleado.id,
             'username': empleado.username,
             'rol': empleado.rol,
-            'nombre_completo': session['nombre_completo']
+            'nombre_completo': session['nombre_completo'],
+            'login_method': 'traditional'
         }
     }), 200
 
@@ -56,17 +59,41 @@ def logout():
     return jsonify({'message': 'Logout exitoso'}), 200
 
 @auth_bp.route('/me', methods=['GET'])
-@login_required
 def me():
-    empleado = Empleado.query.get(session['user_id'])
-    if not empleado:
-        return jsonify({'error': 'Usuario no encontrado'}), 404
-    return jsonify({
-        'id': empleado.id,
-        'username': empleado.username,
-        'rol': empleado.rol,
-        'nombre_completo': f"{empleado.primer_nombre} {empleado.apellido_paterno}"
-    }), 200
+    """Obtiene información del usuario autenticado (tradicional o Google OAuth)"""
+    # Verificar si hay sesión
+    if 'user_id' not in session:
+        return jsonify({"error": "No autenticado"}), 401
+    
+    # Obtener información según el método de login
+    login_method = session.get('login_method', 'traditional')
+    
+    if login_method == 'google':
+        # Login con Google OAuth - datos ya están en sesión
+        return jsonify({
+            "id": session.get('user_id'),
+            "username": session.get('username'),
+            "rol": session.get('rol'),
+            "nombre_completo": session.get('nombre_completo'),
+            "picture": session.get('google_picture'),
+            "login_method": "google"
+        }), 200
+    else:
+        # Login tradicional - obtener de la base de datos
+        empleado = Empleado.query.get(session['user_id'])
+        
+        if not empleado or not empleado.activo:
+            session.clear()
+            return jsonify({"error": "Usuario no encontrado o inactivo"}), 401
+        
+        return jsonify({
+            "id": empleado.id,
+            "username": empleado.username,
+            "rol": empleado.rol,
+            "nombre_completo": f"{empleado.primer_nombre} {empleado.apellido_paterno}",
+            "picture": empleado.google_picture if empleado.google_picture else None,
+            "login_method": "traditional"
+        }), 200
 
 @auth_bp.route('/check', methods=['GET'])
 def check():
@@ -77,7 +104,8 @@ def check():
                 'id': session['user_id'],
                 'username': session['username'],
                 'rol': session['rol'],
-                'nombre_completo': session.get('nombre_completo')
+                'nombre_completo': session.get('nombre_completo'),
+                'login_method': session.get('login_method', 'traditional')
             }
         }), 200
     return jsonify({'authenticated': False}), 200
