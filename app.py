@@ -27,10 +27,11 @@ def create_app():
     # CONFIGURACIÓN DE COOKIES PARA DESARROLLO Y PRODUCCIÓN
     # ============================================================
     app.config['SESSION_COOKIE_NAME'] = 'pandora_session'
-    app.config['SESSION_COOKIE_SAMESITE'] = None
-    app.config['SESSION_COOKIE_HTTPONLY'] = False
-    app.config['SESSION_COOKIE_SECURE'] = False  # En producción con HTTPS, Render lo maneja
+    app.config['SESSION_COOKIE_SAMESITE'] = 'None'  # Importante: string 'None', no Python None
+    app.config['SESSION_COOKIE_HTTPONLY'] = True    # Más seguro
+    app.config['SESSION_COOKIE_SECURE'] = True      # Requerido para SameSite=None con HTTPS
     app.config['SESSION_COOKIE_PATH'] = '/'
+    app.config['SESSION_COOKIE_DOMAIN'] = None      # No restringir dominio
     # ============================================================
 
     # ============================================================
